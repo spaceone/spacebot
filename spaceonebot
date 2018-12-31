@@ -1,0 +1,9 @@
+#!/bin/bash
+while true; do
+	python -m spacebot $(cat botargs) "$@";
+	if [ "$?" -eq 15 ]; then
+		break;
+	fi
+	echo 'Bot exited!'; sleep 1;
+done
+echo 'Bot stopped!'
