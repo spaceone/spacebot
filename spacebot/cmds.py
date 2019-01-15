@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 import sys
 import shlex
@@ -523,10 +524,8 @@ class Perms(Command):
 class Commander(BaseComponent):
 	"""spaceone IRC bot"""
 
-	@classmethod
-	def reload(cls):
-		# reimport()
-		pass
+	def reload(self):
+		self.plugins.reimport()
 
 	def __init__(self, bot, *args, **kwargs):
 		self.trigger = '..'
@@ -538,6 +537,8 @@ class Commander(BaseComponent):
 		self.master = {'*': ['spaceone', ]}
 		self._master = {'*': []}
 		self.ignore = ['tehron']
+		import spacebot.plugins as plugins
+		self.plugins = plugins
 		super(Commander, self).__init__(bot, *args, **kwargs)
 		Worker(channel=self.channel).register(self)
 
@@ -549,7 +550,8 @@ class Commander(BaseComponent):
 		return self.commands[cmd]
 
 	def init(self, bot, *args, **kwargs):
-		for command in [Server, Reload, Restart, Debug, LS, Find, Cat, Date, Grep, Echo, Box, Tail, Head, WC, MD5Sum, Sha1Sum, Sha256Sum, Sha512Sum, Trigger, Say, Join, Part, Nick, Login, Usage, Help]:
+		plugins = self.plugins.import_plugins()
+		for command in [Server, Reload, Restart, Debug, LS, Find, Cat, Date, Grep, Echo, Box, Tail, Head, WC, MD5Sum, Sha1Sum, Sha256Sum, Sha512Sum, Trigger, Say, Join, Part, Nick, Login] + plugins + [Usage, Help]:
 			command(self).register()
 		self.nickserv(bot)
 
