@@ -5,9 +5,9 @@ import inspect
 import pkgutil
 import importlib
 
-from spacebot.cmds import Command
+from spacebot.cmds import Command, ArgumentInfos
 
-__all__ = ('Command', 'import_plugins', 'reimport')
+__all__ = ('Command', 'ArgumentInfos', 'import_plugins', 'reimport')
 
 commands = []
 
