@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import re
 import sys
 import shlex
 import argparse
@@ -15,8 +14,6 @@ import pytz
 from circuits import BaseComponent, task, handler, Event, Debugger, Worker
 from circuits.protocols.irc import PRIVMSG, NICK, JOIN, PART, QUIT
 from circuits.protocols.irc.utils import strip
-
-from spacebot import wechall
 
 
 class ArgumentParserError(Exception):
@@ -67,6 +64,9 @@ class Command(object):
 
 	def __init__(self, bot):
 		self._commander = bot
+
+	def __call__(self, args):
+		return
 
 	def register(self, *args, **kwargs):
 		return self.add_command(*args, help=self.__doc__, public=self.public, admin=self.admin, private=self.private, threaded=self.threaded, exceptions=self.exceptions, **kwargs)
@@ -505,22 +505,6 @@ class Commander(BaseComponent):
 				masters.remove(user)
 			if status in ('3',) and user not in masters:
 				masters.append(user)
-
-	WC = re.compile(r'''^ok(?:ay)?\s+(?:tehbot|spacebot),?\s*(?:has|did)\s+(?P<who>\w+)\s+solved?\s+(?P<chall>\w[\s\w]*?|"[^"]+"|'[^']+')(?:\s+on\s+(?P<site>\w[\s\w]*?|"[^"]+"|'[^']+'))?\s*\??$''', re.I)
-
-	@handler('privmsg', channel='*', priority=0.6)
-	def _okay_privmsg(self, event, source, target, message):
-		server = self.parent.servers[event.channels[0]]
-		dest = source[0] if target == server.nick else target
-		match = self.WC.search(message)
-		if match:
-			event.stop()
-			user = match.group(1)
-			chall = match.group(2)
-			site = match.group(3) or 'wc'
-			if site.lower() in ('wc', 'wechall'):
-				part = wechall.solvers(chall, user=user)
-				self.fire(PRIVMSG(dest, part), server.channel)
 
 	def _get_master(self, server, org=False):
 		master = self._master if org else self.master
