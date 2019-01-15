@@ -160,6 +160,7 @@ class SpaceBot(Component):
 
 	def add_server(self, server):
 		server = urlparse.urlparse(server)
+		print('Adding server: %r' % (server,))
 		channels = ('#' + server.fragment).split(',') if server.fragment else []
 		client = SpaceBotClient(server.hostname, server.port, server.scheme == 'ircs', nick=server.username, ircchannels=channels, channel=server.hostname).register(self)
 		self.servers[client.channel] = client

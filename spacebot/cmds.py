@@ -529,7 +529,7 @@ class Commander(BaseComponent):
 		pass
 
 	def __init__(self, bot, *args, **kwargs):
-		self.trigger = '.'
+		self.trigger = '..'
 		self.debugger = None
 		self.parser = ArgumentParser(description=self.__doc__, prog='')
 		self.subparsers = self.parser.add_subparsers(title='User commands', description='All available commands', parser_class=ArgumentParser)
@@ -555,6 +555,12 @@ class Commander(BaseComponent):
 
 	def set_trigger(self, trigger):
 		self.trigger = trigger
+
+	def get_trigger(self, source, server):
+		triggers = [self.trigger, '%s: ' % (server.nick,)]
+		if source[0] == 'spaceone':
+			triggers.insert(0, '.')
+		return triggers
 
 	def nickserv(self, bot):
 		for server in bot.servers.values():
@@ -611,7 +617,7 @@ class Commander(BaseComponent):
 			self.fire(PRIVMSG('NickServ', 'STATUS %s' % (source[0],)), server.channel)
 
 		messages = message
-		for trigger in (self.trigger, '%s: ' % (server.nick,)):
+		for trigger in self.get_trigger(source, server):
 			if messages.startswith(trigger):
 				messages = messages[len(trigger):]
 				break
