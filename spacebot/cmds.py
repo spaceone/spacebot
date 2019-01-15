@@ -63,7 +63,7 @@ class Command(object):
 
 	@property
 	def name(self):
-		return type(self).__name__.lower()
+		return type(self).__name__.lower().decode('utf-8')
 
 	def __init__(self, bot):
 		self._commander = bot
@@ -72,7 +72,7 @@ class Command(object):
 		return self.add_command(*args, help=self.__doc__, public=self.public, admin=self.admin, private=self.private, threaded=self.threaded, exceptions=self.exceptions, **kwargs)
 
 	def add_command(self, *args, **kwargs):
-		return self._commander.add_command(self.name, self, *args, **kwargs)
+		return self._commander.add_command(self.name.encode('utf-8'), self, *args, **kwargs)
 
 
 class LS(Command):
@@ -638,6 +638,7 @@ class Commander(BaseComponent):
 				to_stdout, separator, messages = self.pop_next(messages)
 
 			command, args = (message.split(None, 1) + [''])[:2]
+			command = command.encode('utf-8')
 			try:
 				if from_stdin and from_stdin not in ('/dev/stdin'):
 					stdout = from_stdin
@@ -736,13 +737,16 @@ class Commander(BaseComponent):
 		args.ircserver = server
 		args.stdin = stdin
 		args.source = source
+		args.target = target
 		try:
 			result = args.func(args)
+			if isinstance(result, str):
+				result = result.decode('utf-8', 'replace')
 			if isinstance(result, basestring):
 				result = result.splitlines()
 			return dest, result
 		except args.exceptions as exc:
-			return dest, str(exc).splitlines()
+			return dest, str(exc).decode('utf-8', 'replace').splitlines()
 
 	def command_allowed(self, command, source, server):
 		is_admin = source[0] == 'spaceone'
