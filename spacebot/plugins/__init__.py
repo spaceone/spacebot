@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import sys
 import inspect
 import pkgutil
 import importlib
@@ -12,6 +13,8 @@ commands = []
 
 
 def reimport():
+	for module in [x for x in sys.modules if x == __name__ or x.startswith(__name__ + '.')]:
+		sys.modules.pop(module)
 	return
 	import spacebot.plugins
 	reload(spacebot.plugins)
