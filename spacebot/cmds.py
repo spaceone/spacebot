@@ -207,7 +207,7 @@ class Date(Command):
 		return date.strftime("%Y-%m-%d %H:%M:%S")
 
 
-class Box(Command):
+class Hosts(Command):
 
 	def register(self):
 		parser = self.add_command(description='Show which box does what', help='Information about gizmores boxes', public=True)
@@ -215,11 +215,11 @@ class Box(Command):
 
 	def __call__(self, args):
 		return {
-			'0': 'warchall.net',
-			'1': 'spaceone + warchall.gizmore.org + logs.warchall.net',
-			'2': 'wechall.net',
-			'3': 'irc.wechall.net + Lamb3 + some challs',
-			'4': 'gizmore + busch-peine + wanda + mp3',
+			'wc0': 'wc0.wechall.net: warchall.net',
+			'wc1': 'wc1.wechall.net: spaceone + warchall.gizmore.org + logs.warchall.net',
+			'wc2': 'wc2.wechall.net: wechall.net',
+			'wc3': 'wc3.wechall.net: irc.wechall.net + Lamb3 + tehbot + some challs',
+			'wc4': 'wc4.wechall.net: gizmore + busch-peine + wanda + mp3',
 		}.get(args.box.strip(), 'No such box')
 
 
@@ -488,7 +488,7 @@ class Commander(BaseComponent):
 
 	def init(self, bot, *args, **kwargs):
 		plugins = self.plugins.import_plugins()
-		for command in [Server, Reload, Restart, Debug, Date, Grep, Echo, Box, Tail, Head, WC, MD5Sum, Sha1Sum, Sha256Sum, Sha512Sum, Trigger, Say, Join, Part, Nick, Login] + plugins + [Usage, Help]:
+		for command in [Server, Reload, Restart, Debug, Date, Grep, Echo, Hosts, Tail, Head, WC, MD5Sum, Sha1Sum, Sha256Sum, Sha512Sum, Trigger, Say, Join, Part, Nick, Login] + plugins + [Usage, Help]:
 			command(self).register()
 		self.nickserv(bot)
 
