@@ -95,6 +95,7 @@ class Echo(Command):
 	'''display a line of text'''
 
 	public = True
+	admin = True
 
 	def register(self):
 		parser = super(Echo, self).register(True)
