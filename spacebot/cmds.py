@@ -276,9 +276,11 @@ class Trigger(Command):
 
 	def register(self):
 		parser = super(Trigger, self).register()
-		parser.add_argument('trigger')
+		parser.add_argument('trigger', nargs='?')
 
 	def __call__(self, args):
+		if not args.trigger:
+			return 'Trigger is: %r' % (self._commander.trigger)
 		self._commander.set_trigger(args.trigger)
 		return 'New trigger %r active' % (args.trigger,)
 
@@ -452,7 +454,7 @@ class Commander(BaseComponent):
 		self.plugins.reimport()
 
 	def __init__(self, bot, *args, **kwargs):
-		self.trigger = '..'
+		self.trigger = ' '
 		self.debugger = None
 		self.parser = ArgumentParser(description=self.__doc__, prog='')
 		self.subparsers = self.parser.add_subparsers(title='User commands', description='All available commands', parser_class=ArgumentParser)
@@ -460,7 +462,7 @@ class Commander(BaseComponent):
 		self.authenticated = []
 		self.master = {'*': ['spaceone', ]}
 		self._master = {'*': []}
-		self.ignore = ['tehron']
+		self.ignore = []
 		import spacebot.plugins as plugins
 		self.plugins = plugins
 		super(Commander, self).__init__(bot, *args, **kwargs)
@@ -498,7 +500,7 @@ class Commander(BaseComponent):
 	def get_trigger(self, source, server):
 		triggers = [self.trigger, '%s: ' % (server.nick,)]
 		if source[0] == 'spaceone':
-			triggers.insert(0, '.')
+			triggers.insert(1, '.')
 		return triggers
 
 	def nickserv(self, bot):
