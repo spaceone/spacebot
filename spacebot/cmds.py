@@ -57,6 +57,7 @@ class Command(object):
 	public = False
 	admin = False
 	private = False
+	ignore_argument_errors = False
 
 	@property
 	def name(self):
@@ -69,7 +70,7 @@ class Command(object):
 		return
 
 	def register(self, *args, **kwargs):
-		return self.add_command(*args, help=self.__doc__, public=self.public, admin=self.admin, private=self.private, threaded=self.threaded, exceptions=self.exceptions, **kwargs)
+		return self.add_command(*args, help=self.__doc__, public=self.public, admin=self.admin, private=self.private, threaded=self.threaded, exceptions=self.exceptions, ignore_argument_errors=self.ignore_argument_errors, **kwargs)
 
 	def add_command(self, *args, **kwargs):
 		return self._commander.add_command(self.name.encode('utf-8'), self, *args, **kwargs)
@@ -140,6 +141,7 @@ class WC(Command):  # FIXME: conflicts with Lamb3
 	'''print newline, word, and byte counts for each file'''
 
 	public = False
+	ignore_argument_errors = True
 
 	def register(self):
 		parser = super(WC, self).register()
@@ -464,9 +466,22 @@ class Commander(BaseComponent):
 		super(Commander, self).__init__(bot, *args, **kwargs)
 		Worker(channel=self.channel).register(self)
 
-	def add_command(self, cmd, callback, no_args=False, exceptions=(), nargs='+', default=None, public=False, private=False, admin=False, threaded=False, **kwargs):
+	def add_command(self, cmd, callback, no_args=False, exceptions=(), nargs='+', default=None, public=False, private=False, admin=False, threaded=False, ignore_argument_errors=False, **kwargs):
 		self.commands[cmd] = self.subparsers.add_parser(cmd, prog=cmd, **kwargs)
-		self.commands[cmd].set_defaults(func=callback, no_args=no_args, exceptions=tuple(exceptions), stdin=None, source=None, parser=None, ircserver=None, private=private, admin=admin, public=public, threaded=threaded)
+		self.commands[cmd].set_defaults(
+			func=callback,
+			no_args=no_args,
+			exceptions=tuple(exceptions),
+			stdin=None,
+			source=None,
+			parser=None,
+			ircserver=None,
+			private=private,
+			admin=admin,
+			public=public,
+			threaded=threaded,
+			ignore_argument_errors=ignore_argument_errors,
+		)
 		if no_args:
 			self.commands[cmd].add_argument("args", nargs=nargs, default=default)
 		return self.commands[cmd]
@@ -638,7 +653,12 @@ class Commander(BaseComponent):
 		parser = self.commands[command]
 		if parser.get_default('private'):
 			dest = source[0]
-		args = parser.parse_args(args)
+		try:
+			args = parser.parse_args(args)
+		except ArgumentParserError:
+			if not parser.get_default('ignore_argument_errors'):
+				raise
+			return dest, None
 		args.parser = parser
 		args.ircserver = server
 		args.stdin = stdin
