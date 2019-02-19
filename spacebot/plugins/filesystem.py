@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import random
 
 from spacebot.plugins import Command, ArgumentInfos
 
@@ -35,7 +36,16 @@ FS = {
 	'/var/log/': Directory(5),
 	'/var/log/apache/': Directory(6),
 	'/var/log/apache/access.log': File(46),
-	'/sbin/': Directory(9),
+	'/dev/': Directory(9),
+	'/dev/sda': File(13),
+	'/dev/null': File(70),
+	'/dev/random': File(71),
+	'/dev/urandom': File(72),
+	'/dev/tty0': File(73),
+	'/dev/stdin': File(74),
+	'/dev/stdout': File(75),
+	'/dev/stderr': File(76),
+	'/dev/fd': File(77),
 	'/home/': Directory(22),
 	'/home/spaceone/': Directory(50),
 	'/home/gizmore/.bash_history': File(65),
@@ -47,14 +57,18 @@ ELF = r'\x7fELF\x02\x01\x01\x00'
 FILES = {
 	11: 'root:x:0:0:root:/:/bin/false\nmailer:x:100:100:mailer:/var:/bin/false\ngizmore:x:Gizmore:/home/gizmore:/bin/sh\nspaceone:x:SpaceOne:/home/spaceone:/bin/bash\n',
 	12: 'Permission denied',
+	13: 'Permission denied',
 	46: '',
 	65: 'sudo su\ncd ~/git\ncd www/challenges/\nfind\ncat dloser/brownos/solution.php\nexit\nfirefox\n',
 	14: ELF, 15: ELF, 16: ELF, 17: ELF, 18: ELF, 19: ELF, 20: ELF, 21: ELF,
+	70: '', 71: lambda: repr(random._urandom(20)).strip("'") + '...', 72: lambda: repr(random._urandom(20)).strip("'") + '...', 73: '', 74: '', 75: '', 76: '', 77: '',
 }
 
 
 class LS(Command):
 	'''list directory contents'''
+
+	public = True
 
 	def register(self):
 		parser = super(LS, self).register()
@@ -114,6 +128,8 @@ class Find(Command):
 class Cat(Command):
 	'''concatenate files and print on the standard output'''
 
+	public = True
+
 	def register(self):
 		parser = super(Cat, self).register()
 		parser.add_argument('filename')
@@ -130,7 +146,10 @@ def cat(filename):
 	inode = ls(filename).get('.')
 	if inode is None:
 		return 'No such file or directory'
-	return FILES.get(inode, 'Is a directory')
+	content = FILES.get(inode, 'Is a directory')
+	if callable(content):
+		content = content()
+	return content
 
 
 def ls(directory='/'):
