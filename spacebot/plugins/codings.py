@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import binascii
+
 from spacebot.plugins import Command
 
 
 class Base64(Command):
 	"""base64 encode/decode data and print to standard output"""
+
+	exceptions = (binascii.Error,)
 
 	def register(self):
 		parser = super(Base64, self).register()
