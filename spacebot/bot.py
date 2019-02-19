@@ -6,7 +6,7 @@ import signal
 import argparse
 import urlparse
 
-from circuits import handler, Component, Debugger, Event, sleep
+from circuits import handler, Component, BaseComponent, Debugger, Event, sleep
 
 #from circuits.io import stdin
 
@@ -119,7 +119,7 @@ class SpaceBotClient(Component):
 		print("<{0:s}> {1:s}".format(self.nick, data))
 
 
-class SpaceBot(Component):
+class SpaceBot(BaseComponent):
 
 	channel = 'ircconnections'
 
@@ -172,6 +172,10 @@ class SpaceBot(Component):
 				client.fire(QUIT(message))
 				return client
 
+	def disconnect(self, message='Leaving!'):
+		for server in self.servers:
+			self.remove_server(server, message)
+
 	@handler('unregistered', channel='*')
 	def unregistered(self, child, parent):
 		if parent is self and child in self.servers.values():
@@ -179,6 +183,7 @@ class SpaceBot(Component):
 		if not self.servers:
 			self.stop()
 
+	@handler('signal')
 	def signal(self, event, signo, stack):
 		if signo == signal.SIGINT:
 			for client in self.servers.values():
