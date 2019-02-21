@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import time
 from socket import gethostname
 import signal
 import argparse
@@ -35,6 +36,8 @@ class SpaceBotClient(Component):
 		TCPClient(secure=secure, channel=self.channel).register(self)
 		self.irc = IRC(channel=self.channel).register(self)
 
+		self.last_called = 0
+		self.max_rate = 1
 		self.privmsg_queue = []
 
 	def ready(self, component):
@@ -88,6 +91,7 @@ class SpaceBotClient(Component):
 				self.fire(Event.create('privmsg_queue'))
 			self.privmsg_queue.append(message)
 			return
+		self.last_called = time.time()
 		message.encoding = self.irc.encoding
 		self.fire(write(bytes(message)))
 
@@ -96,21 +100,12 @@ class SpaceBotClient(Component):
 		while self.privmsg_queue:
 			message = self.privmsg_queue.pop(0)
 			message.encoding = self.irc.encoding
+			self.last_called = time.time()
 			self.fire(write(bytes(message)))
-			seconds = 0.0
-			if len(self.privmsg_queue) <= 2:
-				seconds = 0.10
-			elif len(self.privmsg_queue) <= 4:
-				seconds = 0.25
-			elif len(self.privmsg_queue) <= 8:
-				seconds = 0.5
-			elif len(self.privmsg_queue) <= 10:
-				seconds = 0.75
-			elif len(self.privmsg_queue) <= 15:
-				seconds = 1.0
-			else:
-				seconds = 1.25
-			yield sleep(seconds)
+			elapsed = time.time() - self.last_called
+			must_wait = 1 / self.max_rate - elapsed
+			if must_wait > 0:
+				yield sleep(max(0, must_wait))
 
 	@handler("read", channel="stdin")
 	def stdin_read(self, data):
