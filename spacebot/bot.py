@@ -5,7 +5,7 @@ import time
 from socket import gethostname
 import signal
 import argparse
-import urlparse
+from urllib.parse import urlparse
 
 from circuits import handler, Component, BaseComponent, Debugger, Event, sleep
 
@@ -154,7 +154,7 @@ class SpaceBot(BaseComponent):
 		self.commander = Commander(self, channel=self.channel).register(self)
 
 	def add_server(self, server):
-		server = urlparse.urlparse(server)
+		server = urlparse(server)
 		print('Adding server: %r' % (server,))
 		channels = ('#' + server.fragment).split(',') if server.fragment else []
 		client = SpaceBotClient(server.hostname, server.port, server.scheme == 'ircs', nick=server.username, ircchannels=channels, channel=server.hostname).register(self)

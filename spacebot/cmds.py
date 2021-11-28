@@ -7,13 +7,17 @@ import textwrap
 import datetime
 import hashlib
 import requests
-import urllib
+import importlib
 
 import pytz
+import six
+from six.moves.urllib_parse import quote
 
 from circuits import BaseComponent, task, handler, Event, Debugger, Worker
 from circuits.protocols.irc import PRIVMSG, NICK, JOIN, PART, QUIT
 from circuits.protocols.irc.utils import strip
+
+unicode = str
 
 
 class ArgumentParserError(Exception):
@@ -34,13 +38,11 @@ class ArgumentParser(argparse.ArgumentParser):
 
 	def parse_args(self, args=None, namespace=None, decode=True):
 		self.show_help = False
-		if isinstance(args, basestring):
-			args = args.encode('utf-8')
+		if isinstance(args, str):
 			try:
-				args = shlex.split(args.replace('\\', '\\\\'))
+				return shlex.split(args.replace('\\', '\\\\'))
 			except ValueError as exc:
 				raise ArgumentParserError('Invalid args: %s' % (exc,))
-			args = [arg.decode('utf-8', 'replace') for arg in args]
 
 		try:
 			return super(ArgumentParser, self).parse_args(args, namespace)
@@ -61,7 +63,7 @@ class Command(object):
 
 	@property
 	def name(self):
-		return type(self).__name__.lower().decode('utf-8')
+		return type(self).__name__.lower()
 
 	def __init__(self, bot):
 		self._commander = bot
@@ -73,7 +75,7 @@ class Command(object):
 		return self.add_command(*args, help=self.__doc__, public=self.public, admin=self.admin, private=self.private, threaded=self.threaded, exceptions=self.exceptions, ignore_argument_errors=self.ignore_argument_errors, **kwargs)
 
 	def add_command(self, *args, **kwargs):
-		return self._commander.add_command(self.name.encode('utf-8'), self, *args, **kwargs)
+		return self._commander.add_command(self.name, self, *args, **kwargs)
 
 
 class Grep(Command):
@@ -215,13 +217,14 @@ class Hosts(Command):
 		parser.add_argument('box')
 
 	def __call__(self, args):
-		return {
+		boxes = {
 			'wc0': 'wc0.wechall.net: warchall.net',
 			'wc1': 'wc1.wechall.net: spaceone + warchall.gizmore.org + logs.warchall.net',
 			'wc2': 'wc2.wechall.net: wechall.net',
 			'wc3': 'wc3.wechall.net: irc.wechall.net + Lamb3 + tehbot + some challs',
 			'wc4': 'wc4.wechall.net: gizmore + busch-peine + wanda + mp3',
-		}.get(args.box.strip(), 'No such box')
+		}
+		return boxes.get(args.box.strip(), 'No such box, choose between %s' % (', '.join(boxes),))
 
 
 class HashFunc(Command):
@@ -240,19 +243,19 @@ class HashFunc(Command):
 	def __call__(self, args):
 		hashname = self.hashname
 		_hashfunc = getattr(hashlib, hashname)
-		length = len(_hashfunc('').hexdigest())
+		length = len(_hashfunc(b'').hexdigest())
 		foo = '<span title="decrypted %s hash">' % (hashname,)
 
 		content = '\n'.join(args.stdin) if args.stdin else args.args
 		if args.decrypt:
 			x = content.strip()
 			if len(x) == length:
-				c = requests.get('http://hashtoolkit.com/reverse-hash/?hash=%s' % (urllib.quote(x),)).content
+				c = requests.get('http://hashtoolkit.com/reverse-hash/?hash=%s' % (quote(x),)).content.decode('UTF-8', 'replace')
 				if foo not in c:
 					return 'hash not found!'
 				plain = c.split(foo, 1)[-1].split('</span>', 1)[0]
 				return repr(plain).strip('"\'')
-		return _hashfunc(content).hexdigest()
+		return _hashfunc(content.encode("UTF-8")).hexdigest()
 
 
 class MD5Sum(HashFunc):
@@ -339,7 +342,7 @@ class Usage(Command):
 
 	def register(self):
 		parser = self.add_command(help='Print usage for a certain command', public=True)
-		parser.add_argument('command', choices=self._commander.commands.keys() + ['help'])
+		parser.add_argument('command', choices=list(self._commander.commands.keys()) + ['help'])
 
 	def __call__(self, args):
 		if self._commander.command_allowed(args.command, args.source, args.ircserver):
@@ -350,7 +353,7 @@ class Help(Command):
 
 	def register(self):
 		parser = self.add_command(private=True, public=True)
-		parser.add_argument('command', nargs='?', choices=self._commander.commands.keys())
+		parser.add_argument('command', nargs='?', choices=list(self._commander.commands.keys()))
 
 	def __call__(self, args):
 		if args.command and self._commander.command_allowed(args.command, args.source, args.ircserver):
@@ -379,10 +382,11 @@ class Reload(Command):
 		try:
 			commander = self._commander
 			commander.reload()
-			self._commander = reload(sys.modules[__name__]).Commander(self._commander.parent, channel=self._commander.channel).register(self._commander.parent)
+			x = importlib.reload(sys.modules[__name__])
+			self._commander = x.Commander(self._commander.parent, channel=self._commander.channel).register(self._commander.parent)
 			commander.unregister()
 		except Exception as exc:
-			print traceback.format_exc()
+			print(traceback.format_exc())
 			return 'Reload failed! %s' % (exc,)
 		else:
 			return 'Okay, ready to crush tehbot!'
@@ -562,7 +566,7 @@ class Commander(BaseComponent):
 				to_stdout, separator, messages = self.pop_next(messages)
 
 			command, args = (message.split(None, 1) + [''])[:2]
-			command = command.encode('utf-8')
+#			command = command.encode('utf-8')
 			try:
 				if from_stdin and from_stdin not in ('/dev/stdin'):
 					stdout = from_stdin
@@ -576,14 +580,15 @@ class Commander(BaseComponent):
 				else:
 					cmd = Event.create('execute', server, command, args, source, target, dest, stdin=stdout)
 				value = (yield self.call(cmd)).value
-				try:
-					dest, stdout = value
-				except ValueError:
-					raise value[0], value[1], value[2]
+				if len(value) == 3:
+					six.reraise(value[0], value[1], value[2])
+
+				dest, stdout = value
+
 				if to_stdout and to_stdout not in ('/dev/stdout',):
-					if not to_stdout.startswith('/') and to_stdout not in ('spaceone',) and source[0] not in ('spaceone'):
+					if not to_stdout.startswith('/') and to_stdout not in ('spaceone',) and source[0] not in ('spaceone',):
 						raise ArgumentInfos('Cannot redirect to other users/channels! login or redirect to /foo.')
-					elif not to_stdout.startswith('/') and source[0] in ('spaceone'):
+					elif not to_stdout.startswith('/') and source[0] in ('spaceone',):
 						if dest == destination:
 							dest = to_stdout
 					elif to_stdout in ('spaceone', 'livinskull', 'tehron', 'dloser', '#wechall', '#wechalladmin', '#spaceone'):
@@ -606,7 +611,7 @@ class Commander(BaseComponent):
 				if not separator or separator == '&&':
 					break
 			except BaseException as exc:
-				print traceback.format_exc()
+				print(traceback.format_exc())
 				stdout = ("Error: %s" % (exc)).splitlines()
 				for line in self.wrap(traceback.format_exception(*sys.exc_info())):
 					self.fire(PRIVMSG('spaceone', repr(line).lstrip('u').strip('\'"')), server.channel)
@@ -656,6 +661,10 @@ class Commander(BaseComponent):
 		parser = self.commands[command]
 		if parser.get_default('private'):
 			dest = source[0]
+
+		if isinstance(args, str):
+			args = shlex.split(args)
+
 		try:
 			args = parser.parse_args(args)
 		except ArgumentParserError:
@@ -670,12 +679,10 @@ class Commander(BaseComponent):
 		try:
 			result = args.func(args)
 			if isinstance(result, str):
-				result = result.decode('utf-8', 'replace')
-			if isinstance(result, basestring):
 				result = result.splitlines()
 			return dest, result
 		except args.exceptions as exc:
-			return dest, str(exc).decode('utf-8', 'replace').splitlines()
+			return dest, str(exc).splitlines()
 
 	def command_allowed(self, command, source, server):
 		is_admin = source[0] == 'spaceone'
@@ -692,8 +699,6 @@ class Commander(BaseComponent):
 				for _ in self.wrap(y):
 					yield _
 		elif isinstance(x, (str, bytes, unicode)):
-			if isinstance(x, unicode):
-				x = x.encode('utf-8', 'replace')
 			for _ in textwrap.wrap(str(x), length):
 				yield _
 		else:

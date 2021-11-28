@@ -8,6 +8,6 @@ if __name__ == "__main__":
 	except (SystemExit, KeyboardInterrupt, SyntaxError):
 		raise
 	except:
-		print 'MainError:'
-		print traceback.format_exc()
+		print('MainError:')
+		print(traceback.format_exc())
 		raise

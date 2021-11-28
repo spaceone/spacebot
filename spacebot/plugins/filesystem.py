@@ -51,7 +51,7 @@ FS = {
 	'/home/gizmore/.bash_history': File(65),
 	'/home/gizmore/': Directory(39),
 }
-FS = dict((inode, name) for name, inode in FS.iteritems())
+FS = dict((inode, name) for name, inode in FS.items())
 ELF = r'\x7fELF\x02\x01\x01\x00'
 
 FILES = {
@@ -82,7 +82,7 @@ class LS(Command):
 
 	def __call__(self, args):
 		files = ls(args.directory) or {'': '.'}
-		files = sorted([(k, v) for k, v in files.iteritems()])
+		files = sorted([(k, v) for k, v in files.items()])
 
 		def _colorify(file_or_dir):
 			if args.color in ('auto', 'always') and (file_or_dir.endswith('/') or file_or_dir in ('.', '..')):
@@ -121,8 +121,8 @@ class Find(Command):
 					return False
 				elif args.type == 'd' and not file_or_dir.endswith('/'):
 					return False
-			return args.all or not k.startswith('.')
-		return ['%s %s' % (v, k) if args.inode else k for k, v in sorted(find(args.directory).iteritems()) if _filter(k)]
+			return args.all or not file_or_dir.startswith('.')
+		return ['%s %s' % (v, k) if args.inode else k for k, v in sorted(find(args.directory).items()) if _filter(k)]
 
 
 class Cat(Command):
@@ -139,7 +139,7 @@ class Cat(Command):
 
 
 def find(filename):
-	return dict((name, inode) for inode, name in FS.iteritems())
+	return dict((name, inode) for inode, name in FS.items())
 
 
 def cat(filename):
@@ -165,7 +165,7 @@ def ls(directory='/'):
 			if segment + '/' in root:
 				segment += '/'
 			else:
-				print 'root', root, segment
+				print('root', root, segment)
 				root = {segment: Directory(256)}  # will cause a "no directory" error
 		if isinstance(root[segment], Directory):
 			root = _ls(root[segment])

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import base64
 import binascii
 
 from spacebot.plugins import Command
@@ -18,5 +19,5 @@ class Base64(Command):
 	def __call__(self, args):
 		content = '\n'.join(args.stdin) if args.stdin else args.data
 		if args.decode:
-			return repr(content.decode('base64'))
-		return content.encode('base64').rstrip()
+			return repr(base64.b64decode(content)).lstrip("b").strip("'\"")
+		return base64.b64encode(content.encode('UTF-8')).decode("ASCII").rstrip()
