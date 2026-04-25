@@ -406,7 +406,7 @@ class Commander(BaseComponent):
     """spaceone IRC bot"""
 
     def reload(self):
-        self.plugins.reimport()
+        self.plugins = self.plugins.reimport()
 
     def __init__(self, bot, *args, **kwargs):
         self.trigger = ' '

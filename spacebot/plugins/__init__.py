@@ -13,12 +13,11 @@ commands = []
 
 
 def reimport():
-    for module in [x for x in sys.modules if x == __name__ or x.startswith(__name__ + '.')]:
-        sys.modules.pop(module)
-    return
     import spacebot.plugins
-
-    reload(spacebot.plugins)
+    # for module in [x for x in sys.modules if x == __name__ or x.startswith(__name__ + '.')]:
+    for module in [x for x in sys.modules if x.startswith(__name__ + '.')]:
+        sys.modules.pop(module)
+    return importlib.reload(spacebot.plugins)
 
 
 def is_command(member):
@@ -41,5 +40,5 @@ def import_plugins():
             for name, value in inspect.getmembers(c, is_command)
             if not name.startswith('_')
         )
-    print('Registering plugins:\n', '\n'.join(map(repr, plugins)))
+    print('Registering plugins:', ', '.join(p.__name__ for p in plugins))
     return plugins
