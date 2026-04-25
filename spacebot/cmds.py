@@ -5,13 +5,10 @@ import argparse
 import traceback
 import textwrap
 import datetime
-import hashlib
-import requests
 import importlib
 
 import pytz
 import six
-from six.moves.urllib_parse import quote
 
 from circuits import BaseComponent, task, handler, Event, Debugger, Worker
 from circuits.protocols.irc import PRIVMSG, NICK, JOIN, PART, QUIT
@@ -236,52 +233,6 @@ class Hosts(Command):
         return boxes.get(args.box.strip(), 'No such box, choose between %s' % (', '.join(boxes),))
 
 
-class HashFunc(Command):
-    threaded = True
-
-    @property
-    def hashname(self):
-        return self.name[: -len('sum')]
-
-    def register(self):
-        parser = self.add_command(help='compute and check %s message digest' % (self.hashname.upper(),), public=True, threaded=True)
-        parser.add_argument('-d', '--decrypt', action='store_true')
-        parser.add_argument('args', nargs='?', default='')
-
-    def __call__(self, args):
-        hashname = self.hashname
-        hashfunc = getattr(hashlib, hashname)
-        length = len(hashfunc(b'').hexdigest())
-        foo = '<span title="decrypted %s hash">' % (hashname,)
-
-        content = '\n'.join(args.stdin) if args.stdin else args.args
-        if args.decrypt:
-            x = content.strip()
-            if len(x) == length:
-                c = requests.get('http://hashtoolkit.com/reverse-hash/?hash=%s' % (quote(x),)).content.decode('UTF-8', 'replace')
-                if foo not in c:
-                    return 'hash not found!'
-                plain = c.split(foo, 1)[-1].split('</span>', 1)[0]
-                return repr(plain).strip('"\'')
-        return hashfunc(content.encode('UTF-8')).hexdigest()
-
-
-class MD5Sum(HashFunc):
-    pass
-
-
-class Sha1Sum(HashFunc):
-    pass
-
-
-class Sha256Sum(HashFunc):
-    pass
-
-
-class Sha512Sum(HashFunc):
-    pass
-
-
 class Trigger(Command):
     admin = True
 
@@ -495,7 +446,7 @@ class Commander(BaseComponent):
     def init(self, bot, *args, **kwargs):
         plugins = self.plugins.import_plugins()
         for command in (
-            [Server, Reload, Restart, Debug, Date, Grep, Echo, Hosts, Tail, Head, WC, MD5Sum, Sha1Sum, Sha256Sum, Sha512Sum, Trigger, Say, Join, Part, Nick, Login]
+            [Server, Reload, Restart, Debug, Date, Grep, Echo, Hosts, Tail, Head, WC, Trigger, Say, Join, Part, Nick, Login]
             + plugins
             + [Usage, Help]
         ):

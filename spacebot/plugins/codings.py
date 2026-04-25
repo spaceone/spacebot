@@ -2,6 +2,10 @@
 
 import base64
 import binascii
+import hashlib
+from urllib_parse import quote
+
+import requests
 
 from spacebot.plugins import Command
 
@@ -21,6 +25,52 @@ class Base64(Command):
         if args.decode:
             return repr(base64.b64decode(content)).lstrip('b').strip('\'"')
         return base64.b64encode(content.encode('UTF-8')).decode('ASCII').rstrip()
+
+
+class _HashFunc(Command):
+    threaded = True
+
+    @property
+    def hashname(self):
+        return self.name[: -len('sum')]
+
+    def register(self):
+        parser = self.add_command(help='compute and check %s message digest' % (self.hashname.upper(),), public=True, threaded=True)
+        parser.add_argument('-d', '--decrypt', action='store_true')
+        parser.add_argument('args', nargs='?', default='')
+
+    def __call__(self, args):
+        hashname = self.hashname
+        hashfunc = getattr(hashlib, hashname)
+        length = len(hashfunc(b'').hexdigest())
+        foo = '<span title="decrypted %s hash">' % (hashname,)
+
+        content = '\n'.join(args.stdin) if args.stdin else args.args
+        if args.decrypt:
+            x = content.strip()
+            if len(x) == length:
+                c = requests.get('http://hashtoolkit.com/reverse-hash/?hash=%s' % (quote(x),)).content.decode('UTF-8', 'replace')
+                if foo not in c:
+                    return 'hash not found!'
+                plain = c.split(foo, 1)[-1].split('</span>', 1)[0]
+                return repr(plain).strip('"\'')
+        return hashfunc(content.encode('UTF-8')).hexdigest()
+
+
+class MD5Sum(_HashFunc):
+    pass
+
+
+class Sha1Sum(_HashFunc):
+    pass
+
+
+class Sha256Sum(_HashFunc):
+    pass
+
+
+class Sha512Sum(_HashFunc):
+    pass
 
 
 def obfuscate(string):
