@@ -36,6 +36,10 @@ def import_plugins():
 
     plugins = []
     for c in commands:
-        plugins.extend(dict(inspect.getmembers(c, is_command)).values())
+        plugins.extend(
+            value
+            for name, value in inspect.getmembers(c, is_command)
+            if not name.startswith('_')
+        )
     print('Registering plugins:\n', '\n'.join(map(repr, plugins)))
     return plugins
