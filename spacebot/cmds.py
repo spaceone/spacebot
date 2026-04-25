@@ -266,9 +266,10 @@ class Join(Command):
     def register(self):
         parser = super().register()
         parser.add_argument('channel')
+        parser.add_argument('key', nargs='?')
 
     def __call__(self, args):
-        self._commander.fire(JOIN(args.channel), args.ircserver.channel)
+        self._commander.fire(JOIN(args.channel, args.key), args.ircserver.channel)
 
 
 class Part(Command):
@@ -277,9 +278,10 @@ class Part(Command):
     def register(self):
         parser = super().register()
         parser.add_argument('channel')
+        parser.add_argument('message', nargs='?')
 
     def __call__(self, args):
-        self._commander.fire(PART(args.channel), args.ircserver.channel)
+        self._commander.fire(PART(args.channel, args.message), args.ircserver.channel)
 
 
 class Nick(Command):
