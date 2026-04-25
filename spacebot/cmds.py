@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import shlex
+import string
 import argparse
 import traceback
 import textwrap
@@ -14,7 +15,7 @@ from circuits import BaseComponent, task, handler, Event, Debugger, Worker
 from circuits.protocols.irc import PRIVMSG, NICK, JOIN, PART, QUIT
 from circuits.protocols.irc.utils import strip
 
-unicode = str
+ASCII_LETTER_DIGITS = tuple(string.ascii_letters + string.digits)
 
 
 class ArgumentParserError(Exception):
@@ -576,6 +577,8 @@ class Commander(BaseComponent):
 
     def respond(self, dest, stdout, server):
         for line in self.wrap(stdout or []):
+            if not line.startswith(ASCII_LETTER_DIGITS):
+                line = f' {line}'
             self.fire(PRIVMSG(dest, line), server.channel)
 
     def pop_next(self, messages):
@@ -652,7 +655,7 @@ class Commander(BaseComponent):
             for y in x:
                 for _ in self.wrap(y):
                     yield _
-        elif isinstance(x, (str, bytes, unicode)):
+        elif isinstance(x, (str, bytes)):
             for _ in textwrap.wrap(str(x), length):
                 yield _
         else:
