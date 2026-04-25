@@ -7,7 +7,7 @@ import importlib
 
 from spacebot.cmds import Command, ArgumentInfos
 
-__all__ = ('Command', 'ArgumentInfos', 'import_plugins', 'reimport')
+__all__ = ('ArgumentInfos', 'Command', 'import_plugins', 'reimport')
 
 commands = []
 

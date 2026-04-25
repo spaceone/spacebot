@@ -45,7 +45,7 @@ class ArgumentParser(argparse.ArgumentParser):
 				raise ArgumentParserError('Invalid args: %s' % (exc,))
 
 		try:
-			return super(ArgumentParser, self).parse_args(args, namespace)
+			return super().parse_args(args, namespace)
 		except SystemExit:
 			pass
 		if self.show_help:
@@ -79,12 +79,12 @@ class Command(object):
 
 
 class Grep(Command):
-	'''print lines matching a pattern'''
+	"""print lines matching a pattern"""
 
 	public = True
 
 	def register(self):
-		parser = super(Grep, self).register()
+		parser = super().register()
 		parser.add_argument('-v', '--invert-match', action='store_true', help='Invert the sense of matching, to select non-matching lines.')
 		parser.add_argument('pattern')
 
@@ -94,13 +94,13 @@ class Grep(Command):
 
 
 class Echo(Command):
-	'''display a line of text'''
+	"""display a line of text"""
 
 	public = True
 	admin = True
 
 	def register(self):
-		parser = super(Echo, self).register(True)
+		parser = super().register(True)
 		parser.add_argument('-e', action='store_true', help='enable interpretation of backslash escapes')
 
 	def __call__(self, args):
@@ -115,12 +115,12 @@ class Echo(Command):
 
 
 class Tail(Command):
-	'''output the last part of files'''
+	"""output the last part of files"""
 
 	public = True
 
 	def register(self):
-		parser = super(Tail, self).register()
+		parser = super().register()
 		parser.add_argument('-n', '--lines', default=10, type=int)
 
 	def __call__(self, args):
@@ -128,12 +128,12 @@ class Tail(Command):
 
 
 class Head(Command):
-	'''output the first part of files'''
+	"""output the first part of files"""
 
 	public = True
 
 	def register(self):
-		parser = super(Head, self).register()
+		parser = super().register()
 		parser.add_argument('-n', '--lines', default=10, type=int)
 
 	def __call__(self, args):
@@ -141,13 +141,13 @@ class Head(Command):
 
 
 class WC(Command):  # FIXME: conflicts with Lamb3
-	'''print newline, word, and byte counts for each file'''
+	"""print newline, word, and byte counts for each file"""
 
 	public = False
 	ignore_argument_errors = True
 
 	def register(self):
-		parser = super(WC, self).register()
+		parser = super().register()
 		parser.add_argument('-c', '--bytes', action='store_true', help='print the byte counts')
 		parser.add_argument('-m', '--chars', action='store_true', help='print the character counts')
 		parser.add_argument('-l', '--lines', action='store_true', help='print the newline counts')
@@ -179,12 +179,12 @@ class WC(Command):  # FIXME: conflicts with Lamb3
 
 
 class Date(Command):
-	'''print or set the system date and time'''
+	"""print or set the system date and time"""
 
 	public = True
 
 	def register(self):
-		parser = super(Date, self).register()
+		parser = super().register()
 		parser.add_argument('--tz', dest='timezone')
 		parser.add_argument('-d', '--date', default='now', help="display time described by STRING, not 'now'")
 		parser.add_argument('-u', '--utc', '--universal', action='store_true', help='print or set Coordinated Universal Time (UTC)')
@@ -242,8 +242,8 @@ class HashFunc(Command):
 
 	def __call__(self, args):
 		hashname = self.hashname
-		_hashfunc = getattr(hashlib, hashname)
-		length = len(_hashfunc(b'').hexdigest())
+		hashfunc = getattr(hashlib, hashname)
+		length = len(hashfunc(b'').hexdigest())
 		foo = '<span title="decrypted %s hash">' % (hashname,)
 
 		content = '\n'.join(args.stdin) if args.stdin else args.args
@@ -255,7 +255,7 @@ class HashFunc(Command):
 					return 'hash not found!'
 				plain = c.split(foo, 1)[-1].split('</span>', 1)[0]
 				return repr(plain).strip('"\'')
-		return _hashfunc(content.encode("UTF-8")).hexdigest()
+		return hashfunc(content.encode("UTF-8")).hexdigest()
 
 
 class MD5Sum(HashFunc):
@@ -279,7 +279,7 @@ class Trigger(Command):
 	admin = True
 
 	def register(self):
-		parser = super(Trigger, self).register()
+		parser = super().register()
 		parser.add_argument('trigger', nargs='?')
 
 	def __call__(self, args):
@@ -294,7 +294,7 @@ class Say(Command):
 	admin = True
 
 	def register(self):
-		parser = super(Say, self).register()
+		parser = super().register()
 		parser.add_argument('channel')
 		parser.add_argument('message', nargs='+')
 
@@ -307,7 +307,7 @@ class Join(Command):
 	admin = True
 
 	def register(self):
-		parser = super(Join, self).register()
+		parser = super().register()
 		parser.add_argument('channel')
 
 	def __call__(self, args):
@@ -319,7 +319,7 @@ class Part(Command):
 	admin = True
 
 	def register(self):
-		parser = super(Part, self).register()
+		parser = super().register()
 		parser.add_argument('channel')
 
 	def __call__(self, args):
@@ -331,7 +331,7 @@ class Nick(Command):
 	admin = True
 
 	def register(self):
-		parser = super(Nick, self).register()
+		parser = super().register()
 		parser.add_argument('nick')
 
 	def __call__(self, args):
@@ -375,7 +375,7 @@ class Reload(Command):
 	admin = True
 
 	def register(self):
-		parser = super(Reload, self).register()
+		parser = super().register()
 		parser.add_argument('-c', '--core', action='store_true', default=True)
 
 	def __call__(self, args):
@@ -397,7 +397,7 @@ class Restart(Command):
 	admin = True
 
 	def register(self):
-		parser = super(Restart, self).register()
+		parser = super().register()
 		parser.add_argument('message', nargs='*')
 
 	def __call__(self, args):
@@ -410,7 +410,7 @@ class Server(Command):
 	admin = True
 
 	def register(self):
-		parser = super(Server, self).register()
+		parser = super().register()
 		sub = parser.add_subparsers()
 		connect = sub.add_parser('connect')
 		connect.set_defaults(connect=True)
@@ -435,7 +435,7 @@ class Debug(Command):
 	admin = True
 
 	def register(self):
-		parser = super(Debug, self).register()
+		parser = super().register()
 		parser.add_argument('-e', '--enable', action='store_true')
 
 	def __call__(self, args):
@@ -465,12 +465,12 @@ class Commander(BaseComponent):
 		self.subparsers = self.parser.add_subparsers(title='User commands', description='All available commands', parser_class=ArgumentParser)
 		self.commands = {}
 		self.authenticated = []
-		self.master = {'*': ['spaceone', ]}
+		self.master = {'*': ['spaceone']}
 		self._master = {'*': []}
 		self.ignore = []
-		import spacebot.plugins as plugins
+		from spacebot import plugins
 		self.plugins = plugins
-		super(Commander, self).__init__(bot, *args, **kwargs)
+		super().__init__(bot, *args, **kwargs)
 		Worker(channel=self.channel).register(self)
 
 	def add_command(self, cmd, callback, no_args=False, exceptions=(), nargs='+', default=None, public=False, private=False, admin=False, threaded=False, ignore_argument_errors=False, **kwargs):
@@ -537,7 +537,7 @@ class Commander(BaseComponent):
 		server = self.parent.servers[event.channels[0]]
 		message = strip(raw, True)
 		if source[0] not in ('spaceone',) and target == server.nick:
-			self.fire(PRIVMSG('spaceone', '%s wrote: %r' % (source[0], message,)), server.channel)
+			self.fire(PRIVMSG('spaceone', '%s wrote: %r' % (source[0], message)), server.channel)
 		destination = source[0] if target == server.nick else target
 		dest = destination
 
@@ -566,7 +566,7 @@ class Commander(BaseComponent):
 				to_stdout, separator, messages = self.pop_next(messages)
 
 			command, args = (message.split(None, 1) + [''])[:2]
-#			command = command.encode('utf-8')
+			# command = command.encode('utf-8')
 			try:
 				if from_stdin and from_stdin not in ('/dev/stdin'):
 					stdout = from_stdin
@@ -644,7 +644,7 @@ class Commander(BaseComponent):
 			return 0, ''
 
 		minimum = min(results)[0]
-		sep = max([x[1] for x in results if x[0] == minimum])
+		sep = max(x[1] for x in results if x[0] == minimum)
 		return minimum, sep
 
 	@handler('execute')
@@ -689,9 +689,7 @@ class Commander(BaseComponent):
 		is_master = source[0] in self._get_master(server)
 		needs_master = not self.commands[command].get_default('public')
 		needs_admin = self.commands[command].get_default('admin')
-		if (needs_master and not is_master) or (needs_admin and not is_admin):
-			return False
-		return True
+		return not (needs_master and not is_master or needs_admin and not is_admin)
 
 	def wrap(self, x, length=400):
 		if isinstance(x, (list, tuple)):

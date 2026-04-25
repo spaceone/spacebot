@@ -1,3 +1,3 @@
 from spacebot.bot import SpaceBot
 
-__all__ = ['SpaceBot', ]
+__all__ = ['SpaceBot']

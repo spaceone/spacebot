@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 
 from circuits import handler, Component, BaseComponent, Debugger, Event, sleep
 
-#from circuits.io import stdin
+# from circuits.io import stdin
 
 from circuits.net.events import connect, write
 from circuits.net.sockets import TCPClient
@@ -111,7 +111,7 @@ class SpaceBotClient(Component):
 	def stdin_read(self, data):
 		data = data.strip().decode("utf-8")
 
-		print("<{0:s}> {1:s}".format(self.nick, data))
+		print("<{:s}> {:s}".format(self.nick, data))
 
 
 class SpaceBot(BaseComponent):
@@ -137,8 +137,8 @@ class SpaceBot(BaseComponent):
 		if args.debug:
 			Debugger().register(conn)
 		conn.run()
-		#if args.without_readline:
-		#	stdin.register(client)
+		# if args.without_readline:
+		#     stdin.register(client)
 		# readline.parse_and_bind("tab: complete")
 		# client.start()
 		# time.sleep(0.3)
@@ -147,7 +147,7 @@ class SpaceBot(BaseComponent):
 		return conn
 
 	def __init__(self, args):
-		super(SpaceBot, self).__init__()
+		super().__init__()
 		self.servers = {}
 		for server in args.server:
 			self.add_server(server)

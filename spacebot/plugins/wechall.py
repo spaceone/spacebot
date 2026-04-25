@@ -31,7 +31,7 @@ class WeChallCommands(BaseComponent):
 class WeChall(Command):
 
 	def register(self):
-		super(WeChall, self).register()
+		super().register()
 		if hasattr(self._commander, 'wechall'):
 			self._commander.wechall.unregister()
 		self._commander.wechall = WeChallCommands(channel=self._commander.channel).register(self._commander)

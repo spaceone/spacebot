@@ -51,7 +51,7 @@ FS = {
 	'/home/gizmore/.bash_history': File(65),
 	'/home/gizmore/': Directory(39),
 }
-FS = dict((inode, name) for name, inode in FS.items())
+FS = {inode: name for name, inode in FS.items()}
 ELF = r'\x7fELF\x02\x01\x01\x00'
 
 FILES = {
@@ -66,12 +66,12 @@ FILES = {
 
 
 class LS(Command):
-	'''list directory contents'''
+	"""list directory contents"""
 
 	public = True
 
 	def register(self):
-		parser = super(LS, self).register()
+		parser = super().register()
 		parser.add_argument("-a", "--all", action='store_true', help="do not ignore entries starting with .")
 		parser.add_argument('-A', '--almost-all', action='store_true', help='do not list implied . and ..')
 		parser.add_argument("-i", "--inode", action='store_true', help="print the index number of each file")
@@ -105,10 +105,10 @@ class LS(Command):
 
 
 class Find(Command):
-	'''search for files in a directory hierarchy'''
+	"""search for files in a directory hierarchy"""
 
 	def register(self):
-		parser = super(Find, self).register()
+		parser = super().register()
 		parser.add_argument('-type', choices=['f', 'd'], help='File is of type')
 		parser.add_argument("-a", "--all", action='store_true', help="do not ignore entries starting with .")
 		parser.add_argument("-i", "--inode", action='store_true', help="print the index number of each file")
@@ -126,12 +126,12 @@ class Find(Command):
 
 
 class Cat(Command):
-	'''concatenate files and print on the standard output'''
+	"""concatenate files and print on the standard output"""
 
 	public = True
 
 	def register(self):
-		parser = super(Cat, self).register()
+		parser = super().register()
 		parser.add_argument('filename')
 
 	def __call__(self, args):
@@ -139,7 +139,7 @@ class Cat(Command):
 
 
 def find(filename):
-	return dict((name, inode) for inode, name in FS.items())
+	return {name: inode for inode, name in FS.items()}
 
 
 def cat(filename):
@@ -185,7 +185,7 @@ def _ls(inode):
 	directory = FS.get(inode)
 	if not directory:
 		raise ArgumentInfos('Not a directory')
-	result = dict((get_name(_inode), _inode) for _inode, name in FS.items() if name.startswith(directory) and name != directory and '/' not in name[len(directory):].rstrip('/'))
+	result = {get_name(inode_): inode_ for inode_, name in FS.items() if name.startswith(directory) and name != directory and '/' not in name[len(directory):].rstrip('/')}
 	result['.'] = inode
 	return result
 

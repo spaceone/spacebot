@@ -12,7 +12,7 @@ class Base64(Command):
 	exceptions = (binascii.Error,)
 
 	def register(self):
-		parser = super(Base64, self).register()
+		parser = super().register()
 		parser.add_argument('-d', '--decode', action='store_true', help='decode data')
 		parser.add_argument('data', nargs='?')
 
