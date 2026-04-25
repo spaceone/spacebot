@@ -3,7 +3,7 @@
 import base64
 import binascii
 import hashlib
-from urllib_parse import quote
+from urllib.parse import quote
 
 import requests
 
