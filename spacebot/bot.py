@@ -3,9 +3,10 @@
 
 import time
 from socket import gethostname
+from itertools import zip_longest
 import signal
 import argparse
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 from circuits import handler, Component, BaseComponent, Debugger, Event, sleep
 
@@ -30,7 +31,7 @@ class SpaceBotClient(Component):
         self.hostname = gethostname()
 
         self.nick = nick
-        self.ircchannel = ircchannels
+        self.ircchannels = ircchannels
 
         TCPClient(secure=secure, channel=self.channel).register(self)
         self.irc = IRC(channel=self.channel).register(self)
@@ -59,8 +60,8 @@ class SpaceBotClient(Component):
 
     def numeric(self, source, numeric, *args):
         if numeric == RPL_WELCOME:
-            for channel in self.ircchannel:
-                self.fire(JOIN(channel))
+            for channel, key in zip_longest(*self.ircchannels):
+                self.fire(JOIN(channel, key))
         elif numeric == ERR_USERONCHANNEL:
             self.nick = newnick = '%s_' % self.nick
             self.fire(NICK(newnick))
@@ -155,8 +156,11 @@ class SpaceBot(BaseComponent):
     def add_server(self, server):
         server = urlparse(server)
         print('Adding server: %r' % (server,))
-        channels = ('#' + server.fragment).split(',') if server.fragment else []
-        client = SpaceBotClient(server.hostname, server.port, server.scheme == 'ircs', nick=server.username, ircchannels=channels, channel=server.hostname).register(self)
+        ircchannels = []
+        if server.fragment:
+            channels, _, keys = ('#' + unquote(server.fragment)).partition(' ')
+            ircchannels = [channels.split(','), keys.split(',')]
+        client = SpaceBotClient(server.hostname, server.port, server.scheme == 'ircs', nick=server.username, ircchannels=ircchannels, channel=server.hostname).register(self)
         self.servers[client.channel] = client
         return client
 
