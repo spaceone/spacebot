@@ -126,7 +126,7 @@ class SpaceBot(BaseComponent):
             pass
         parser = argparse.ArgumentParser(prog='spaceonebot')
 
-        parser.add_argument('-s', '--server', action='append', help='URI of a server, e.g. ircs://spacebot@irc.freenode.net:6697/#channel')
+        parser.add_argument('-s', '--server', action='append', help='URI of a server, e.g. ircs://spacebot@irc.libera.chat:6697/#channel')
         parser.add_argument('--without-stdin', action='store_true', help='Disable stdin commands')
         parser.add_argument('--without-readline', action='store_false', default=False, help='Disable readline prompt and tab completion')
         parser.add_argument('-d', '--debug', action='store_true', default=False, help='Enable debug verbose logging')
@@ -142,7 +142,7 @@ class SpaceBot(BaseComponent):
         # client.start()
         # time.sleep(0.3)
         # while client.running:
-        # 	client.stdin_read(raw_input('>>> '))
+        #     client.stdin_read(raw_input('>>> '))
         return conn
 
     def __init__(self, args):
