@@ -148,7 +148,7 @@ class Head(Command):
         return (args.stdin or [])[: args.lines]
 
 
-class WC(Command):  # FIXME: conflicts with Lamb3
+class WC(Command):
     """print newline, word, and byte counts for each file"""
 
     public = False
@@ -227,10 +227,11 @@ class Hosts(Command):
     def __call__(self, args):
         boxes = {
             'wc0': 'wc0.wechall.net: warchall.net',
-            'wc1': 'wc1.wechall.net: spaceone + warchall.gizmore.org + logs.warchall.net',
+            'wc1': 'wc1.wechall.net: dropped strato',  # spaceone + warchall.gizmore.org + logs.warchall.net',
             'wc2': 'wc2.wechall.net: wechall.net',
             'wc3': 'wc3.wechall.net: irc.wechall.net + Lamb3 + tehbot + some challs',
-            'wc4': 'wc4.wechall.net: gizmore + busch-peine + wanda + mp3',
+            'wc4': 'wc4.wechall.net: gizmore + busch-peine + wanda + mp3 + dev-env (www2.wechal.net)',
+            'wc5': 'wc5.wechall.net: ???, pouniok',
         }
         return boxes.get(args.box.strip(), 'No such box, choose between %s' % (', '.join(boxes),))
 
